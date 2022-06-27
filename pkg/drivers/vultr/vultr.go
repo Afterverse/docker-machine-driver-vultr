@@ -430,6 +430,13 @@ func (d *Driver) Remove() error {
 		return err
 	}
 
+	if len(d.SSHKeyId) > 0 {
+		err := d.removeSSHKey()
+		if err != nil {
+			return err
+		}
+	}
+
 	log.Debugf("removing %s", d.MachineName)
 	switch d.ServerType {
 	case serverTypeBareMetal:
@@ -579,6 +586,18 @@ func (d *Driver) createSSHKey() (*govultr.SSHKey, error) {
 	}
 
 	return key, nil
+}
+
+func (d *Driver) removeSSHKey() error {
+
+	for i := range d.SSHKeyId {
+		err := d.getClient().SSHKey.Delete(context.Background(), d.SSHKeyId[i])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // publicSSHKeyPath is always SSH Key Path appended with ".pub"
